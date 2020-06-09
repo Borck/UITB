@@ -8,42 +8,39 @@ namespace Assets.UITB.Common {
     private T _value;
 
 
-    public event EventHandler<ChangeEvent<T>> ValueUpdated;
-    public event EventHandler<ChangeEvent<T>> ValueChanged;
+
+    public DependencyValue() => _value = default;
+
+
+
+    public DependencyValue(T initialValue) => _value = initialValue;
+
 
 
     public T value {
       get => _value;
-      set => SetValueAndNotify( value );
+      set => SetValueAndNotify(value);
     }
 
 
-
-    public DependencyValue() { }
-
-
-
-    public DependencyValue(T initialValue) {
-      _value = initialValue;
-    }
+    public event EventHandler<ChangeEvent<T>> ValueUpdated;
+    public event EventHandler<ChangeEvent<T>> ValueChanged;
 
 
 
     public void SetValueAndNotify(T newValue) {
-      var changed = !Equals( _value, newValue );
-      var e = new DependencyValueChangeEvent( _value, newValue );
+      var changed = !Equals(_value, newValue);
+      var e = new DependencyValueChangeEvent(_value, newValue);
       _value = newValue;
-      ValueUpdated?.Invoke( this, e );
+      ValueUpdated?.Invoke(this, e);
       if (changed) {
-        ValueChanged?.Invoke( this, e );
+        ValueChanged?.Invoke(this, e);
       }
     }
 
 
 
-    public void SetValueWithoutNotify(T newValue) {
-      _value = newValue;
-    }
+    public void SetValueWithoutNotify(T newValue) => _value = newValue;
 
 
 

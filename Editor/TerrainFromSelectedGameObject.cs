@@ -6,28 +6,30 @@ using UnityEngine;
 
 namespace Assets.UITB.Editor {
   /// <summary>
-  ///   https://lmhpoly.com/convert-mesh-to-unity-terrain/
+  ///   Create a terrain from the selected GameObject
+  ///   Source: https://lmhpoly.com/convert-mesh-to-unity-terrain/
   /// </summary>
   public class TerrainFromSelectedGameObject : EditorWindow {
-    [MenuItem( "GameObject/3D Object/Terrain from Selection", false, 10000 )]
-    static void OpenWindow() {
-      GetWindow<TerrainFromSelectedGameObject>( true );
-    }
+    private static readonly string[] BottomTopRadio = {"Bottom Up", "Top Down"};
+    private Vector3 _addTerrain;
+    private int _bottomTopRadioSelected;
 
 
 
     private int _resolution = 512;
-    private Vector3 _addTerrain;
-    int _bottomTopRadioSelected;
-    private static readonly string[] BottomTopRadio = { "Bottom Up", "Top Down" };
     private float _shiftHeight;
 
 
 
-    void OnGUI() {
-      _resolution = EditorGUILayout.IntField( "Resolution", _resolution );
-      _addTerrain = EditorGUILayout.Vector3Field( "Add terrain", _addTerrain );
-      _shiftHeight = EditorGUILayout.Slider( "Shift height", _shiftHeight, -1f, 1f );
+    [MenuItem("GameObject/3D Object/Terrain from Selection", false, 10000)]
+    private static void OpenWindow() => GetWindow<TerrainFromSelectedGameObject>(true);
+
+
+
+    private void OnGUI() {
+      _resolution = EditorGUILayout.IntField("Resolution", _resolution);
+      _addTerrain = EditorGUILayout.Vector3Field("Add terrain", _addTerrain);
+      _shiftHeight = EditorGUILayout.Slider("Shift height", _shiftHeight, -1f, 1f);
       _bottomTopRadioSelected = GUILayout.SelectionGrid(
         _bottomTopRadioSelected,
         BottomTopRadio,
@@ -35,9 +37,9 @@ namespace Assets.UITB.Editor {
         EditorStyles.radioButton
       );
 
-      if (GUILayout.Button( "Create Terrain" )) {
+      if (GUILayout.Button("Create Terrain")) {
         if (Selection.activeGameObject == null) {
-          EditorUtility.DisplayDialog( "No object selected", "Please select an object.", "Ok" );
+          EditorUtility.DisplayDialog("No object selected", "Please select an object.", "Ok");
         } else {
           CreateTerrain();
         }
@@ -46,18 +48,14 @@ namespace Assets.UITB.Editor {
 
 
 
-    delegate void CleanUp();
-
-
-
-    void CreateTerrain() {
+    private void CreateTerrain() {
       //fire up the progress bar
-      ShowProgressBar( 1, 100 );
+      ShowProgressBar(1, 100);
 
-      var terrain = new TerrainData { heightmapResolution = _resolution };
-      var terrainObject = Terrain.CreateTerrainGameObject( terrain );
+      var terrain = new TerrainData {heightmapResolution = _resolution};
+      var terrainObject = Terrain.CreateTerrainGameObject(terrain);
 
-      Undo.RegisterCreatedObjectUndo( terrainObject, "Object to Terrain" );
+      Undo.RegisterCreatedObjectUndo(terrainObject, "Object to Terrain");
 
       var collider = Selection.activeGameObject.GetComponent<MeshCollider>();
       CleanUp cleanUp = null;
@@ -66,34 +64,34 @@ namespace Assets.UITB.Editor {
       //Otherwise raycasting doesn't work.
       if (!collider) {
         collider = Selection.activeGameObject.AddComponent<MeshCollider>();
-        cleanUp = () => DestroyImmediate( collider );
+        cleanUp = () => DestroyImmediate(collider);
       }
 
       var bounds = collider.bounds;
-      var sizeFactor = collider.bounds.size.y / ( collider.bounds.size.y + _addTerrain.y );
+      var sizeFactor = collider.bounds.size.y / (collider.bounds.size.y + _addTerrain.y);
       terrain.size = collider.bounds.size + _addTerrain;
-      bounds.size = new Vector3( terrain.size.x, collider.bounds.size.y, terrain.size.z );
+      bounds.size = new Vector3(terrain.size.x, collider.bounds.size.y, terrain.size.z);
 
       // Do raycasting samples over the object to see what terrain heights should be
       var heights = new float[terrain.heightmapResolution, terrain.heightmapResolution];
-      var ray = new Ray( new Vector3( bounds.min.x, bounds.max.y + bounds.size.y, bounds.min.z ), -Vector3.up );
+      var ray = new Ray(new Vector3(bounds.min.x, bounds.max.y + bounds.size.y, bounds.min.z), -Vector3.up);
       var hit = new RaycastHit();
       var meshHeightInverse = 1 / bounds.size.y;
       var rayOrigin = ray.origin;
 
-      var maxHeight = heights.GetLength( 0 );
-      var maxLength = heights.GetLength( 1 );
+      var maxHeight = heights.GetLength(0);
+      var maxLength = heights.GetLength(1);
 
-      var stepXz = new Vector2( bounds.size.x / maxLength, bounds.size.z / maxHeight );
+      var stepXz = new Vector2(bounds.size.x / maxLength, bounds.size.z / maxHeight);
 
       for (var zCount = 0; zCount < maxHeight; zCount++) {
-        ShowProgressBar( zCount, maxHeight );
+        ShowProgressBar(zCount, maxHeight);
 
         for (var xCount = 0; xCount < maxLength; xCount++) {
           var height = 0.0f;
 
-          if (collider.Raycast( ray, out hit, bounds.size.y * 3 )) {
-            height = ( hit.point.y - bounds.min.y ) * meshHeightInverse;
+          if (collider.Raycast(ray, out hit, bounds.size.y * 3)) {
+            height = (hit.point.y - bounds.min.y) * meshHeightInverse;
             height += _shiftHeight;
 
             //bottom up
@@ -117,7 +115,7 @@ namespace Assets.UITB.Editor {
         ray.origin = rayOrigin;
       }
 
-      terrain.SetHeights( 0, 0, heights );
+      terrain.SetHeights(0, 0, heights);
 
       EditorUtility.ClearProgressBar();
 
@@ -126,10 +124,14 @@ namespace Assets.UITB.Editor {
 
 
 
-    void ShowProgressBar(float progress, float maxProgress) {
+    private void ShowProgressBar(float progress, float maxProgress) {
       var p = progress / maxProgress;
-      EditorUtility.DisplayProgressBar( "Creating Terrain...", Mathf.RoundToInt( p * 100f ) + " %", p );
+      EditorUtility.DisplayProgressBar("Creating Terrain...", Mathf.RoundToInt(p * 100f) + " %", p);
     }
+
+
+
+    private delegate void CleanUp();
   }
 }
 #endif

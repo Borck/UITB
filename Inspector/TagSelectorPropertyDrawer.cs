@@ -4,27 +4,29 @@
 
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditorInternal;
 using UnityEngine;
 
 //Original by DYLAN ENGELMAN http://jupiterlighthousestudio.com/custom-inspectors-unity/
 //Altered by Brecht Lecluyse http://www.brechtos.com
 
-namespace Assets.UITB.Inspector {
-  [CustomPropertyDrawer( typeof( TagSelectorAttribute ) )]
-  public class TagSelectorPropertyDrawer : PropertyDrawer {
 
+
+namespace Assets.UITB.Inspector {
+  [CustomPropertyDrawer(typeof(TagSelectorAttribute))]
+  public class TagSelectorPropertyDrawer : PropertyDrawer {
     public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
       if (property.propertyType == SerializedPropertyType.String) {
-        EditorGUI.BeginProperty( position, label, property );
+        EditorGUI.BeginProperty(position, label, property);
 
         var attribute = this.attribute as TagSelectorAttribute;
 
         if (attribute?.UseDefaultTagFieldDrawer ?? false) {
-          property.stringValue = EditorGUI.TagField( position, label, property.stringValue );
+          property.stringValue = EditorGUI.TagField(position, label, property.stringValue);
         } else {
           //generate the taglist + custom tags
-          var tagList = new List<string> { "<NoTag>" };
-          tagList.AddRange( UnityEditorInternal.InternalEditorUtility.tags );
+          var tagList = new List<string> {"<NoTag>"};
+          tagList.AddRange(InternalEditorUtility.tags);
           var propertyString = property.stringValue;
           var index = -1;
           if (propertyString == "") {
@@ -42,7 +44,7 @@ namespace Assets.UITB.Inspector {
           }
 
           //Draw the popup box with the current selected index
-          index = EditorGUI.Popup( position, label.text, index, tagList.ToArray() );
+          index = EditorGUI.Popup(position, label.text, index, tagList.ToArray());
 
           //Adjust the actual string value of the property based on the selection
           if (index == 0) {
@@ -56,7 +58,7 @@ namespace Assets.UITB.Inspector {
 
         EditorGUI.EndProperty();
       } else {
-        EditorGUI.PropertyField( position, property, label );
+        EditorGUI.PropertyField(position, property, label);
       }
     }
   }

@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using Assets.UITB.Attributes;
 using Assets.UITB.Common;
 using Assets.UITB.Extensions;
 using UnityEngine;
@@ -9,156 +8,157 @@ using UnityEngine;
 
 namespace Assets.UITB.Components {
   /// <summary>
-  /// Applies a transform relatively to its defined parent, like it is a direct child
+  ///   Applies a transform relatively to its defined parent, like it is a direct child
   /// </summary>
-  ///https://answers.unity.com/questions/932677/how-to-check-if-inspector-object-field-was-changed.html
-  ///https://answers.unity.com/questions/1206632/trigger-event-on-variable-change.html
-  ///https://answers.unity.com/questions/59983/callback-on-variable-change-inside-editor.html
-  ///
-  [Author( "Christian Borck", "christian.borck@b-tu.de", "https://www.b-tu.de/fg-automatisierungstechnik" )]
   [ExecuteInEditMode]
   public class AnchorTransform : MonoBehaviour {
     #region static members
 
-    private const string PATH_LOCAL_POS = "transform.localPosition";
-    private const string PATH_LOCAL_ROT = "transform.localRotation";
-    private const string PATH_LOCAL_SCA = "transform.localScale";
+    private const string PathLocalPos = "transform.localPosition";
+    private const string PathLocalRot = "transform.localRotation";
+    private const string PathLocalSca = "transform.localScale";
 
     private static readonly ISet<string> PushMembers = new HashSet<string> {
       nameof(localPosition),
       nameof(localRotation),
       nameof(localScale),
-      nameof(m_localRotation),
-      nameof(anchor)
+      nameof(_mLocalRotation),
+      nameof(AnchorOverride)
     };
 
-    private static readonly ISet<string> PullMembers = new HashSet<string> {
-      PATH_LOCAL_POS, PATH_LOCAL_ROT, PATH_LOCAL_SCA
-    };
-
+    private static readonly ISet<string> PullMembers = new HashSet<string> {PathLocalPos, PathLocalRot, PathLocalSca};
 
     #endregion
 
 
     #region members
 
+    private readonly RecordedFieldsManager _recMan;
+    public bool LinkPosition = true;
 
-
-    private readonly FieldRecordManager _recMan;
-    public bool linkPosition = true;
     /// <summary>
-    /// Link local position
+    ///   Link local position
     /// </summary>
     [SerializeField]
+    // ReSharper disable once InconsistentNaming
     public Vector3 localPosition = Vector3.zero;
 
-    public bool linkRotation = true;
-    /// <summary>
-    /// Link local rotation as euler angles, only for inspector
-    /// </summary>
-    [SerializeField]
-    private Vector3 m_localRotation = Vector3.zero;
+    public bool LinkRotation = true;
 
     /// <summary>
-    /// Link local rotation
+    ///   Link local rotation as euler angles, only for inspector
+    /// </summary>
+    [SerializeField]
+    private Vector3 _mLocalRotation = Vector3.zero;
+
+    /// <summary>
+    ///   Link local rotation
     /// </summary>
     [SerializeField]
     [HideInInspector]
+    // ReSharper disable once InconsistentNaming
     public Quaternion localRotation = Quaternion.identity;
 
 
-    public bool linkScale = true;
+    public bool LinkScale = true;
+
     /// <summary>
-    /// Link local scale
+    ///   Link local scale
     /// </summary>
     [SerializeField]
+    // ReSharper disable once InconsistentNaming
     public Vector3 localScale = Vector3.one;
 
 
 
     /// <summary>
-    /// Linked parent as transform reference
+    ///   Linked parent as transform reference
     /// </summary>
-    public Transform anchor;
+    public Transform AnchorOverride;
 
 
     /// <summary>
-    /// World transform relative applying <see cref="localPosition"/>, <see cref="localRotation"/> and <see cref="localScale"/> on anchor transform
+    ///   World transform relative applying <see cref="localPosition" />, <see cref="localRotation" /> and
+    ///   <see cref="localScale" /> on anchor transform
     /// </summary>
     public TransformData anchorRelativeWorldTransform {
       get {
-        var localTfBackup = TransformData.FromLocalTransform( transform );
+        var localTfBackup = TransformData.FromLocalTransform(transform);
 
-        transform.SetLocalTRSRelativeTo( anchor,
-                                         localPosition,
-                                         localRotation,
-                                         localScale );
+        transform.SetLocalTRSRelativeTo(
+          AnchorOverride,
+          localPosition,
+          localRotation,
+          localScale
+        );
 
-        var anchorRelativeWorldTransform = TransformData.FromWorldTransform( transform );
-        localTfBackup.ApplyLocalTRSTo( transform );
+        var anchorRelativeWorldTransform = TransformData.FromWorldTransform(transform);
+        localTfBackup.ApplyLocalTRSTo(transform);
         return anchorRelativeWorldTransform;
       }
     }
 
-    public TransformData ParentRelativeWorldTransform => TransformData.FromWorldTransform( transform );
-
+    public TransformData ParentRelativeWorldTransform => TransformData.FromWorldTransform(transform);
 
     #endregion
 
 
 
     private AnchorTransform() {
-      _recMan = new FieldRecordManager( this, FieldRecordManager.AddMode.AllFields );
-      _recMan.AddRecorder( PATH_LOCAL_POS );
-      _recMan.AddRecorder( PATH_LOCAL_ROT );
-      _recMan.AddRecorder( PATH_LOCAL_SCA );
+      _recMan = new RecordedFieldsManager(this, RecordedFieldsManager.InitializationMode.AllFields);
+      _recMan.AddRecorder(PathLocalPos);
+      _recMan.AddRecorder(PathLocalRot);
+      _recMan.AddRecorder(PathLocalSca);
     }
 
 
 
     private void Start() {
-      if (anchor) {
+      if (AnchorOverride) {
         PushTransform();
       }
+
       _recMan.RecordAll();
     }
 
 
+
     private void LateUpdate() {
       var propChanges = _recMan.GetChangesAsDictionary();
-      if (anchor) {
-        if (PushMembers.Intersect( propChanges.Keys ).Any()) {
-          if (propChanges.ContainsKey( nameof( m_localRotation ) )) {
-            localRotation = Quaternion.Euler( m_localRotation );
+      if (AnchorOverride) {
+        if (PushMembers.Intersect(propChanges.Keys).Any()) {
+          if (propChanges.ContainsKey(nameof(_mLocalRotation))) {
+            localRotation = Quaternion.Euler(_mLocalRotation);
           }
+
           PushTransform();
-        } else if (PullMembers.Intersect( propChanges.Keys ).Any()) {
+        } else if (PullMembers.Intersect(propChanges.Keys).Any()) {
           PullTransform();
         }
       }
+
       _recMan.RecordAll();
     }
 
 
 
     private void PullTransform() {
-      var (lt, lr, ls) = transform.GetLocalTRSRelativeTo( anchor );
+      var (lt, lr, ls) = transform.GetLocalTRSRelativeTo(AnchorOverride);
       //Debug.Log( $"{name}.{nameof( AnchorTransform )}: pull transform: {transform}" );
       localPosition = lt;
       localRotation = lr;
-      m_localRotation = lr.eulerAngles;
+      _mLocalRotation = lr.eulerAngles;
       localScale = ls;
     }
 
 
 
-    private void PushTransform() {
-      PushTransform( anchorRelativeWorldTransform );
-    }
+    private void PushTransform() => PushTransform(anchorRelativeWorldTransform);
+
 
 
     /// <summary>
-    /// Apply world coordinate of anchor.transform * script.localTransform to gameObject.worldTransform now
+    ///   Apply world coordinate of anchor.transform * script.localTransform to gameObject.worldTransform now
     /// </summary>
     public void ApplyNow() {
       PushTransform();
@@ -168,15 +168,18 @@ namespace Assets.UITB.Components {
 
 
     private void PushTransform(TransformData worldTransform) {
-      if (linkPosition) {
+      if (LinkPosition) {
         transform.position = worldTransform.position;
       }
-      if (linkRotation) {
+
+      if (LinkRotation) {
         transform.rotation = worldTransform.rotation;
       }
-      if (linkScale) {
-        transform.SetLossyScale( worldTransform.scale );
+
+      if (LinkScale) {
+        transform.SetLossyScale(worldTransform.scale);
       }
+
       //Debug.Log( $"{name}.{nameof( AnchorTransform )}: push transform, {transform}" );
     }
   }
