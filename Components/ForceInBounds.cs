@@ -5,7 +5,7 @@ using UnityEngine;
 
 
 public class ForceInBounds : MonoBehaviour {
-  public Collider Bounds;
+  public Bounds Bounds;
 
   private Vector3 _startPos;
   private Quaternion _startRot;
@@ -35,7 +35,7 @@ public class ForceInBounds : MonoBehaviour {
 
 
 
-  private bool IsInBounds() => Bounds.bounds.Contains(transform.position);
+  private bool IsInBounds() => Bounds.Contains(transform.position);
 
   private void ResetTransform() => transform.SetTRS(_startPos, _startRot, _startSca);
 }

@@ -20,7 +20,7 @@ namespace Assets.UITB.Extensions {
 
 
     /// <summary>
-    ///   Transform TRS from source space into destination space
+    ///   Transform TRS from local space into world space
     /// </summary>
     /// <param name="transform"></param>
     /// <param name="localPosition"></param>
@@ -43,7 +43,7 @@ namespace Assets.UITB.Extensions {
 
 
     /// <summary>
-    ///   Transform TRS from source space into destination space
+    ///   Transform TRS from local space into world space
     /// </summary>
     /// <param name="transform"></param>
     /// <param name="localPosition"></param>
@@ -64,7 +64,7 @@ namespace Assets.UITB.Extensions {
 
 
     /// <summary>
-    ///   Transform TRS from source space into destination space
+    ///   Transform TRS from local space into world space
     /// </summary>
     /// <param name="transform"></param>
     /// <param name="localPosition"></param>
@@ -83,7 +83,7 @@ namespace Assets.UITB.Extensions {
 
 
     /// <summary>
-    ///   Transform TRS from source space into destination space
+    ///   Transform TRS from local space into world space
     /// </summary>
     /// <param name="transform"></param>
     /// <param name="localPose"></param>
@@ -94,7 +94,7 @@ namespace Assets.UITB.Extensions {
 
 
     /// <summary>
-    ///   Transform TRS from source space into destination space
+    ///   Transform TRS from world space into local space
     /// </summary>
     /// <param name="transform"></param>
     /// <param name="position"></param>
@@ -114,7 +114,7 @@ namespace Assets.UITB.Extensions {
 
 
     /// <summary>
-    ///   Transform TRS from source space into destination space
+    ///   Transform TRS from world space into local space
     /// </summary>
     /// <param name="transform"></param>
     /// <param name="position"></param>
@@ -132,7 +132,7 @@ namespace Assets.UITB.Extensions {
 
 
     /// <summary>
-    ///   Transform TRS from source space into destination space
+    ///   Transform TRS from world space into local space
     /// </summary>
     /// <param name="transform"></param>
     /// <param name="pose"></param>
