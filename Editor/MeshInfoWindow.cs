@@ -1,8 +1,8 @@
 #if UNITY_EDITOR
 
+using Assets.UITB.Extensions;
 using System;
 using System.Linq;
-using Assets.UITB.Extensions;
 using UnityEditor;
 using UnityEngine;
 
@@ -13,7 +13,9 @@ namespace Assets.UITB.Editor {
   ///   Displays mesh information of the selected GameObject(s)
   /// </summary>
   public class MeshInfoWindow : EditorWindow {
-    [MenuItem("Tools/Documentation/Mesh Info", priority = 1000)]
+    #region Methods and others
+
+    [MenuItem("Window/UITB/Documentation/Mesh Info")]
     public static void ShowWindow() {
       var window = GetWindow(typeof(MeshInfoWindow));
       window.titleContent = new GUIContent("Mesh Info");
@@ -78,6 +80,8 @@ Triangles: {totalTriangles}
     private void OnSelectionChange() =>
       // force redraw window
       Repaint();
+
+    #endregion
   }
 }
 #endif

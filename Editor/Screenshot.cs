@@ -10,6 +10,8 @@ using UnityEngine;
 namespace Assets.UITB.Editor {
   [ExecuteInEditMode]
   public class Screenshot : EditorWindow {
+    #region Members
+
     private float _lastTime;
     private int _resHeight = Screen.height * 4;
     private int _resWidth = Screen.width * 4;
@@ -25,10 +27,12 @@ namespace Assets.UITB.Editor {
 
     public string path = "";
 
+    #endregion
 
+    #region Methods and others
 
     // Add menu item named "My Window" to the Window menu
-    [MenuItem("Tools/Documentation/HD Screenshot", priority = 10000)]
+    [MenuItem("Window/UITB/Documentation/HD Screenshot")]
     public static void ShowWindow() {
       //Show existing window instance. If one doesn't exist, make one.
       var editorWindow = GetWindow(typeof(Screenshot));
@@ -185,6 +189,8 @@ namespace Assets.UITB.Editor {
       Debug.Log("Taking Screenshot");
       _takeHiResShot = true;
     }
+
+    #endregion
   }
 }
 #endif

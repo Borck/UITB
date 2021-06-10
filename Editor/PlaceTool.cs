@@ -1,7 +1,7 @@
 #if UNITY_EDITOR
+using Assets.UITB.Extensions;
 using System.Collections.Generic;
 using System.Linq;
-using Assets.UITB.Extensions;
 using UnityEditor;
 using UnityEngine;
 
@@ -9,19 +9,23 @@ using UnityEngine;
 
 namespace Assets.UITB.Editor {
   public class PlaceTool : EditorWindow {
+    #region Members
+
+    private readonly Vector3 _direction = Vector3.zero;
+
+    #endregion
+
+    #region Methods and others
+
     /// <summary>
     ///   Tool for placing and layout GameObjects depending on their environment.
     /// </summary>
-    [MenuItem("Tools/3D Object/Place Tool", false, 10)]
+    [MenuItem("Window/UITB/3D Object/Place Tool", false)]
     private static void CreateWindow() {
       // Get existing open window or if none, make a new one:
       var window = GetWindow(typeof(PlaceTool), false, "Place Tool");
       window.Show();
     }
-
-
-
-    private readonly Vector3 _direction = Vector3.zero;
 
 
 
@@ -107,6 +111,8 @@ namespace Assets.UITB.Editor {
         Gizmos.DrawLine(dropInfo.origin, dropInfo.hit.point);
       }
     }
+
+    #endregion
   }
 }
 #endif

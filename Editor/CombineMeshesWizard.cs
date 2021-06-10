@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using Assets.UITB.Extensions;
+﻿using Assets.UITB.Extensions;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -7,24 +7,24 @@ using UnityEngine;
 
 namespace Assets.UITB.Editor {
   public class CombineMeshesWizard : ScriptableWizard {
+    #region Members
+
     [Tooltip("Root GameObject of meshes.")]
     public GameObject SourceRoot;
 
     [Tooltip("GameObject to save new combine mesh.")]
     public GameObject TargetObject;
 
+    #endregion
+
+    #region Methods and others
+
+    [MenuItem("Window/UITB/3D Object/Combine Meshes")]
+    private static void ShowEditor() => DisplayWizard("Combine Meshes", typeof(CombineMeshesWizard), "Combine");
 
 
-    [MenuItem("Tools/3D Object/Combine Meshes")]
-    private static void ShowEditor() {
-      DisplayWizard("Combine Meshes", typeof(CombineMeshesWizard), "Combine");
-    }
 
-
-
-    private void OnWizardUpdate() {
-      isValid = SourceRoot && TargetObject;
-    }
+    private void OnWizardUpdate() => isValid = SourceRoot && TargetObject;
 
 
 
@@ -52,5 +52,7 @@ namespace Assets.UITB.Editor {
 
       Selection.activeObject = newMesh;
     }
+
+    #endregion
   }
 }

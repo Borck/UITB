@@ -10,7 +10,14 @@ namespace Assets.UITB.Editor {
   ///   Source: https://lmhpoly.com/convert-mesh-to-unity-terrain/
   /// </summary>
   public class TerrainFromSelectedGameObject : EditorWindow {
+    #region Static Members
+
     private static readonly string[] BottomTopRadio = {"Bottom Up", "Top Down"};
+
+    #endregion
+
+    #region Members
+
     private Vector3 _addTerrain;
     private int _bottomTopRadioSelected;
 
@@ -19,9 +26,11 @@ namespace Assets.UITB.Editor {
     private int _resolution = 512;
     private float _shiftHeight;
 
+    #endregion
 
+    #region Methods and others
 
-    [MenuItem("GameObject/3D Object/Terrain from Selection", false, 10000)]
+    [MenuItem("GameObject/3D Object/UITB/Terrain from Selection", false)]
     private static void OpenWindow() => GetWindow<TerrainFromSelectedGameObject>(true);
 
 
@@ -129,9 +138,13 @@ namespace Assets.UITB.Editor {
       EditorUtility.DisplayProgressBar("Creating Terrain...", Mathf.RoundToInt(p * 100f) + " %", p);
     }
 
+    #endregion
 
+    #region Nested Types
 
     private delegate void CleanUp();
+
+    #endregion
   }
 }
 #endif
