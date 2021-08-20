@@ -1,19 +1,20 @@
 ﻿using System;
-using TMPro;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Events;
 
 
 
-[RequireComponent(typeof(TextMeshProUGUI))]
 [ExecuteInEditMode]
 public class ClockDigital : MonoBehaviour {
-  private TextMeshPro _textClock;
+
+  [System.Serializable]
+  public class TimeTextEvent : UnityEvent<string> { }
+  [SerializeField] private TimeTextEvent tick;
 
 
 
   private void Awake() {
-    _textClock = GetComponent<TextMeshPro>();
     EditorApplication.update += Update;
   }
 
@@ -24,7 +25,7 @@ public class ClockDigital : MonoBehaviour {
     var hour = LeadingZero(time.Hour);
     var minute = LeadingZero(time.Minute);
     var second = LeadingZero(time.Second);
-    _textClock.text = hour + ":" + minute + ":" + second;
+    tick.Invoke(hour + ":" + minute + ":" + second);
   }
 
 

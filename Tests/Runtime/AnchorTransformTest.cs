@@ -1,9 +1,9 @@
-using System;
-using System.Collections;
-using System.Reflection;
 using Assets.MT_Sync.Tests;
 using Assets.UITB.Components;
 using JetBrains.Annotations;
+using System;
+using System.Collections;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.TestTools;
 
@@ -11,6 +11,8 @@ using UnityEngine.TestTools;
 
 namespace Assets.UITB.Tests {
   public class AnchorTransformTest {
+    #region Methods and others
+
     [UnityTest]
     public IEnumerator SetLocalPosRot_UsingProperties_ExpectCorrectLocalPosRotRelativeToAnchor() {
       var (goRoot_0, goRoot_0_0) = createStub(MethodBase.GetCurrentMethod());
@@ -102,11 +104,11 @@ namespace Assets.UITB.Tests {
       var pos = new Vector3(
         (float)(2 * Math.Sin(phi)),
         (float)(3 * Math.Cos(phi)),
-        (float)(4 * Math.Sin(2 * phi + Math.PI / 3))
+        (float)(4 * Math.Sin((2 * phi) + (Math.PI / 3)))
       );
 
       var a = i * 360f / nSamples;
-      var rotEuler = new Vector3(a, a + 120, a * 2 - 120);
+      var rotEuler = new Vector3(a, a + 120, (a * 2) - 120);
       var rot = Quaternion.Euler(rotEuler);
       return new Pose(pos, rot);
     }
@@ -134,5 +136,7 @@ namespace Assets.UITB.Tests {
 
       return (goRoot_0, goRoot_0_0);
     }
+
+    #endregion
   }
 }

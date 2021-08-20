@@ -1,9 +1,10 @@
 {
-    "name": "UITBTests",
+    "name": "Borck.UITB.Tests",
+    "rootNamespace": "",
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "UITB"
+        "Borck.UITB"
     ],
     "includePlatforms": [
         "Editor"
