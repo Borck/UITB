@@ -1,6 +1,6 @@
 {
   "name": "borck.uitb",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "displayName": "Unity in the Box",
   "description": "This packages is a set of solutions for frequently occurring issues.",
   "unity": "2021.1",
