@@ -4,192 +4,196 @@ using UnityEditor.PackageManager;
 using UnityEditor.PackageManager.Requests;
 using UnityEditor.PackageManager.UI;
 using UnityEngine;
+using UnityEngine.UIElements;
+using PackageInfo = UnityEditor.PackageManager.PackageInfo;
 
 
-//fork of https://github.com/mitay-walle/Unity-PackageManager-Update-All/blob/master/PackageManagerUpdateAllUtility.cs
+//Thanks to https://github.com/mitay-walle/Unity-PackageManager-Update-All/
 [InitializeOnLoad]
-public static class PackageManagerUpdateAllUtility {
-  #region Static Members
+public static class PackageManagerUpdateAllUtility
+{
+  #region Constructors
 
-  private const bool ADD_BTN = true;
-  private const bool FULL_LOGS = false;
-
-  private const int MAX_ITERATIONS = 50;
-  private static int UpdatePackagesCurrentCount;
-  private static bool UpdatingSomePackage;
-  private static bool UpdatePackagesInProgress;
-  private static ListRequest lRequest;
-  private static AddRequest aRequest;
-  private static readonly List<string> needToUpate = new List<string>();
-
-  private static readonly PMUpdateAllBtnExtension extension = new PMUpdateAllBtnExtension();
+  static PackageManagerUpdateAllUtility()
+  {
+    PackageManagerExtensions.RegisterExtension(new PmUpdateAllBtnExtension());
+  }
 
   #endregion
 
-  #region Constructors
+  internal class PmUpdateAllBtnExtension : IPackageManagerExtension
+  {
+    public VisualElement CreateExtensionUI()
+    {
+      var cntnr1 = new GroupBox();
+      var cntnr2 = new GroupBox();
+      var cntnr = new Box();
 
-  static PackageManagerUpdateAllUtility() {
-    if (ADD_BTN) {
-      PackageManagerExtensions.RegisterExtension(extension);
+      void SetVisible(bool confirm)
+      {
+        cntnr.Clear();
+        cntnr.Add(confirm ? cntnr2 : cntnr1);
+      }
+
+      var btnUpdate = new Button(() => SetVisible(true)) { text = "Update All Packages" };
+
+      var btnOK = new Button(() =>
+      {
+        StartUpdateAll();
+        SetVisible(false);
+      }) { text = "OK" };
+      var btnCancel = new Button(() => SetVisible(false)) { text = "Cancel" };
+
+      cntnr1.Add(btnUpdate);
+      cntnr2.Add(new TextElement { text = "Are you sure you want to update all packages?" });
+      cntnr2.Add(btnOK);
+      cntnr2.Add(btnCancel);
+      cntnr.Add(cntnr1);
+      return cntnr;
     }
 
-    //            if (FULL_LOGS) Debug.Log("check EditorPrefs");
-    //            UpdatePackagesInProgress = EditorPrefs.GetBool("UpdatePackagesInProgress");
-    //            UpdatePackagesCurrentCount  = EditorPrefs.GetInt("UpdatePackagesCurrentCount");
-    //
-    //            if (UpdatePackagesCurrentCount > MAX_ITERATIONS)
-    //            {
-    //                ForceStop();
-    //                Debug.LogError($"{MAX_ITERATIONS} packages updated, prevent infinite update");
-    //                return;
-    //            }
-    //            
-    //            EditorPrefs.SetInt("UpdatePackagesCurrentCount",UpdatePackagesCurrentCount+1);
-    //            
-    //            if (UpdatePackagesInProgress && !UpdatingSomePackage)
-    //            {
-    //                ContinueUpdateAllpackages();
-    //            }
+    public void OnPackageSelectionChange(PackageInfo packageInfo)
+    {
+    }
+
+    public void OnPackageAddedOrUpdated(PackageInfo packageInfo)
+    {
+    }
+
+    public void OnPackageRemoved(PackageInfo packageInfo)
+    {
+    }
   }
+
+
+  #region Static Members
+
+  private const bool FullLogs = false;
+
+  private static ListRequest _lRequest;
+  private static AddRequest _aRequest;
+  private static readonly Queue<string> ScheduledPackageUpdates = new();
 
   #endregion
 
   #region Methods and others
 
   [MenuItem("Help/Update All Packages (Experimental)")]
-  public static void StartUpdateAll() {
+  public static void StartUpdateAll()
+  {
     EditorPrefs.SetBool("UpdatePackagesInProgress", true);
-    UpdatePackagesInProgress = true;
     ContinueUpdateAllpackages();
   }
 
 
-
-  public static void ContinueUpdateAllpackages() {
-    lRequest = Client.List(); // List packages installed for the Project
+  public static void ContinueUpdateAllpackages()
+  {
+    _lRequest = Client.List(); // List packages installed for the Project
 
     EditorApplication.update += ProgressRequestPackageList;
   }
 
 
-
-  private static void ForceStop() {
+  private static void ForceStop()
+  {
     Debug.LogError("something went wrong!");
     EditorApplication.update -= ProgressRequestPackageList;
     EditorPrefs.SetBool("UpdatePackagesInProgress", true);
 
-    UpdatePackagesCurrentCount = 0;
 
     EditorPrefs.SetInt("UpdatePackagesCurrentCount", 0);
-
-    UpdatePackagesInProgress = true;
   }
 
 
-
-  private static void ProgressRequestPackageList() {
-    if (lRequest == null) {
+  private static void ProgressRequestPackageList()
+  {
+    if (_lRequest == null)
+    {
       ForceStop();
       return;
     }
 
-    if (lRequest.IsCompleted) {
-      if (lRequest.Status == StatusCode.Success) {
+    if (_lRequest.IsCompleted)
+    {
+      if (_lRequest.Status == StatusCode.Success)
         UpdateAll();
-      } else if (lRequest.Status >= StatusCode.Failure) {
-        Debug.LogError(lRequest.Error.message);
-      }
+      else if (_lRequest.Status >= StatusCode.Failure) Debug.LogError(_lRequest.Error.message);
 
       EditorApplication.update -= ProgressRequestPackageList;
     }
   }
 
 
+  private static void UpdateAll()
+  {
+    ScheduledPackageUpdates.Clear();
+    foreach (var package in _lRequest.Result)
+    {
+      if (package.version == package.versions.latestCompatible ||
+          package.version == package.versions.verified) //Debug.Log($"{package.name} up to date");
+        continue;
+      if (string.IsNullOrEmpty(package.versions.latestCompatible))
+        //Latest version could not be evaluated, maybe on faulty or git packages
+        //Debug.Log($"{package.name} up to date");
+        continue;
 
-  private static void UpdateAll() {
-    var check = false;
+      if (FullLogs)
+        Debug.Log(
+          $"'{package.name}' need update from: {package.version} to: {package.versions.latestCompatible} verified:{package.versions.verified}");
 
-    needToUpate.Clear();
-    foreach (var package in lRequest.Result) {
-      if (package.status == PackageStatus.Available) {
-        if (FULL_LOGS) {
-          Debug.Log(
-            $"'{package.name}' current:{package.version} last compatible:{package.versions.latestCompatible} verified:{package.versions.verified}"
-          );
-        }
-
-        if (package.version == package.versions.latestCompatible ||
-            package.version == package.versions.verified) {
-          //Debug.Log($"{package.name} up to date");
-        } else {
-          if (FULL_LOGS) {
-            Debug.Log($"'{package.name}' need update from: {package.version} to: {package.versions.latestCompatible}");
-          }
-
-          needToUpate.Add(package.name);
-          check = true;
-        }
-      }
+      ScheduledPackageUpdates.Enqueue(package.name);
     }
 
-    if (check) {
-      Debug.Log($"need to Update {needToUpate.Count} packages");
+    if (ScheduledPackageUpdates.Count > 0)
+    {
+      Debug.Log($"need to Update {ScheduledPackageUpdates.Count} packages");
       CheckUpdateRequests();
       EditorApplication.update += CheckUpdateRequests;
-    } else {
+    }
+    else
+    {
       Debug.Log("all packages are up to date!");
     }
   }
 
 
-
-  private static void CheckUpdateRequests() {
-    UpdatingSomePackage = false;
-
-    if (aRequest == null) {
-      // update first
-      if (FULL_LOGS) {
-        Debug.Log($"update first: {needToUpate[0]}");
-      }
-
-      aRequest = Client.Add(needToUpate[0]);
+  private static void CheckUpdateRequests()
+  {
+    if (_aRequest == null)
+    {
+      ScheduleNextPackageUpdate();
       return;
     }
 
-    if (!aRequest.IsCompleted) {
-      UpdatingSomePackage = true;
-      return;
-    }
+    if (!_aRequest.IsCompleted) return;
 
     //process update result
-    if (FULL_LOGS) {
-      Debug.Log($"process update result: {aRequest.Result.name}");
+    if (FullLogs) Debug.Log($"process update result: {_aRequest.Result.name}");
+
+    if (_aRequest.Status == StatusCode.Success)
+      Debug.Log($"{_aRequest.Result.name} updated to {_aRequest.Result.version}");
+
+    if (_aRequest.Status >= StatusCode.Failure) Debug.LogError(_aRequest.Error.message);
+
+
+    if (ScheduledPackageUpdates.Count > 0)
+    {
+      ScheduleNextPackageUpdate();
     }
-
-    if (aRequest.Status == StatusCode.Success) {
-      Debug.Log($"{aRequest.Result.name} updated to {aRequest.Result.version}");
-    }
-
-    if (aRequest.Status >= StatusCode.Failure) {
-      Debug.LogError(aRequest.Error.message);
-    }
-
-    needToUpate.Remove(aRequest.Result.name);
-
-    if (needToUpate.Count > 0) {
-      //update next
-      if (FULL_LOGS) {
-        Debug.Log($"update next: {needToUpate[0]}");
-      }
-
-      aRequest = Client.Add(needToUpate[0]);
-    } else {
+    else
+    {
       // finish
       Debug.Log("finish updating all packages");
       EditorApplication.update -= CheckUpdateRequests;
       EditorPrefs.SetBool("UpdatePackagesInProgress", false);
-      UpdatePackagesInProgress = false;
     }
+  }
+
+  private static void ScheduleNextPackageUpdate()
+  {
+    var packageToUpdate = ScheduledPackageUpdates.Dequeue();
+    if (FullLogs) Debug.Log($"update: {packageToUpdate}");
+    _aRequest = Client.Add(packageToUpdate);
   }
 
   #endregion
