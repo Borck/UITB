@@ -72,7 +72,7 @@ public static class PackageManagerUpdateAllUtility
 
   private static ListRequest _lRequest;
   private static AddRequest _aRequest;
-  private static readonly Queue<string> ScheduledPackageUpdates = new();
+  private static readonly Queue<string> ScheduledPackageUpdates = new Queue<string>();
 
   #endregion
 
